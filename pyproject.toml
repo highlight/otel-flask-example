@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "otel-flask"
+version = "0.1.0"
+description = ""
+authors = ["Jay Khatri <jaykhatrimail@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+opentelemetry-api = "^1.29.0"
+opentelemetry-sdk = "^1.29.0"
+opentelemetry-instrumentation-fastapi = "^0.50b0"
+opentelemetry-exporter-otlp-proto-grpc = "^1.29.0"
+opentelemetry-instrumentation-requests = "^0.50b0"
+requests = "^2.32.3"
+flask = "^3.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
