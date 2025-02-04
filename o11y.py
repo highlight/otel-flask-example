@@ -1,5 +1,6 @@
 import logging
 import os
+from dotenv import load_dotenv
 from typing import Optional
 
 from opentelemetry import metrics, trace
@@ -19,8 +20,12 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExport
 
 EXPORTER_OTLP_ENDPOINT = os.getenv("OTEL_ENDPOINT","https://otel.highlight.io:4317")
 
+# read from .env
+load_dotenv()
+
 print("OTEL Endpoint is: ", EXPORTER_OTLP_ENDPOINT)
-HIGHLIGHT_PROJECT_ID = "EMPTY"
+HIGHLIGHT_PROJECT_ID = os.getenv("HIGHLIGHT_PROJECT_ID", "EMPTY")
+print("HIGHLIGHT_PROJECT_ID is: ", HIGHLIGHT_PROJECT_ID)
 
 import sys
 

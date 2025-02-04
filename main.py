@@ -8,7 +8,7 @@ import requests
 
 from o11y import create_logger, create_tracer, get_meter
 
-service_name = "backend"
+service_name = "flask-backend"
 # Initialize observability tools
 logger = create_logger(service_name, os.getenv("ENVIRONMENT"), local_debug=False)
 tracer = create_tracer(service_name, os.getenv("ENVIRONMENT"), local_debug=False)
@@ -50,4 +50,4 @@ def health():
     return jsonify({"response": "hi", "status_code": 200})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    app.run(host="0.0.0.0", port=8000, debug=True)
