@@ -1,7 +1,10 @@
 from flask import Flask, request, jsonify
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from datetime import datetime, timedelta
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+from opentelemetry.trace import Span
+from typing import List, Any
 
 import os
 import requests
@@ -22,15 +25,20 @@ logger.info("Starting the application")
 
 app = Flask(__name__)
 
-RequestsInstrumentor().instrument()
+def request_hook(span: Span, request: Any):
+    if span and span.is_recording():
+        user_id = request.headers.get("user.id", "unknown")
+        span.set_attribute("user.id", user_id)
 
-@app.before_request
-def trace_middleware():
-    traceparent = TraceContextTextMapPropagator().extract({
-        "traceparent": request.headers.get("traceparent")
-    })
-    request.start_time = datetime.now()
-    request.traceparent = traceparent
+def response_hook(span: Span, status: str, response_headers: List):
+    if span and span.is_recording():
+        span.set_attribute("custom_user_attribute_from_response_hook", "some-value")
+        for header, value in response_headers:
+            span.set_attribute(f"http.response.header.{header.lower().replace('-', '_')}", value)
+    
+FlaskInstrumentor().instrument_app(app, excluded_urls="", request_hook=request_hook, response_hook=response_hook)
+
+RequestsInstrumentor().instrument()
 
 @app.after_request
 def after_request(response):
