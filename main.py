@@ -1,7 +1,11 @@
 from flask import Flask, request, jsonify
+from functools import wraps
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from datetime import datetime, timedelta
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+from opentelemetry.trace import Span
+from typing import List, Any
 
 import os
 import requests
@@ -22,27 +26,22 @@ logger.info("Starting the application")
 
 app = Flask(__name__)
 
+# Your custom decorator
+def around_wrapper(fn):
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        logger.info("Before view function")
+        result = fn(*args, **kwargs)
+        logger.info("After view function")
+        return result
+    return wrapped
+
+FlaskInstrumentor().instrument_app(app, excluded_urls="")
+
 RequestsInstrumentor().instrument()
 
-@app.before_request
-def trace_middleware():
-    traceparent = TraceContextTextMapPropagator().extract({
-        "traceparent": request.headers.get("traceparent")
-    })
-    request.start_time = datetime.now()
-    request.traceparent = traceparent
-
-@app.after_request
-def after_request(response):
-    with tracer.start_as_current_span(f"{request.method} {request.path}", context=request.traceparent):
-        counter.add(1)
-        end_time = datetime.now()
-        time_delta: timedelta = end_time - request.start_time
-        histogram.record(time_delta.total_seconds())
-        gauge.set(time_delta.total_seconds())
-    return response
-
 @app.route("/", methods=["GET"])
+@around_wrapper
 def health():
     logger.info("Endpoint called")
     response = requests.get("http://httpbin.org/headers")
