@@ -30,8 +30,14 @@ app = Flask(__name__)
 def around_wrapper(fn):
     @wraps(fn)
     def wrapped(*args, **kwargs):
+        counter.add(1)
+        start_time: datetime = datetime.now()
         logger.info("Before view function")
         result = fn(*args, **kwargs)
+        end_time: datetime = datetime.now()
+        time_delta: timedelta = end_time - start_time
+        histogram.record(time_delta.total_seconds())
+        gauge.set(time_delta.total_seconds())
         logger.info("After view function")
         return result
     return wrapped
